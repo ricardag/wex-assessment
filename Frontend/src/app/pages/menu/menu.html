@@ -1,0 +1,263 @@
+<div class="container">
+  <div class="row">
+    <div class="col-12">
+      @for (alert of alerts; track alert) {
+        <alert [type]="alert.type" [dismissible]="true" (onClosed)="closeAlert(alert)">
+          {{ alert.message }}
+        </alert>
+      }
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12 text-end">
+      <button (click)="isFiltersCollapsed = !isFiltersCollapsed"
+              class="btn btn-outline-secondary me-2"
+              type="button">
+        <i class="fa-solid fa-filter"></i>
+        {{ isFiltersCollapsed ? 'Show Filters' : 'Hide Filters' }}
+      </button>
+      <button type="button" class="btn btn-primary" (click)="newTransaction()">
+        <i class="fa-solid fa-plus"></i>
+        Create new transaction
+      </button>
+    </div>
+  </div>
+
+  @if (!isFiltersCollapsed) {
+    <div class="row mt-2">
+      <div class="col-md-3"></div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <form [formGroup]="filterForm">
+
+              <div class="row">
+                <div class="col-12 mb-3">
+                  <label class="form-label">Description</label>
+                  <input type="text"
+                         class="form-control"
+                         formControlName="description"
+                         placeholder="Search by description">
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-6 mb-3">
+                  <label class="form-label">Transaction Date From</label>
+                  <input type="text"
+                         class="form-control"
+                         bsDatepicker
+                         formControlName="transactionStartDate"
+                         [bsConfig]="{dateInputFormat: 'MM/DD/YYYY'}">
+                </div>
+                <div class="col-6 mb-3">
+                  <label class="form-label">Transaction Date To</label>
+                  <input type="text"
+                         class="form-control"
+                         bsDatepicker
+                         formControlName="transactionEndDate"
+                         [bsConfig]="{dateInputFormat: 'MM/DD/YYYY'}">
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-6 mb-3">
+                  <label class="form-label">Min Amount</label>
+                  <input type="text" class="form-control" mask="separator.2" thousandSeparator="," decimalMarker="." formControlName="minAmount" />
+                </div>
+                <div class="col-6 mb-3">
+                  <label class="form-label">Max Amount</label>
+                  <input type="text" class="form-control" mask="separator.2" thousandSeparator="," decimalMarker="." formControlName="maxAmount" />
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-12 text-end">
+                  <button type="button"
+                          class="btn btn-secondary me-2"
+                          (click)="clearFilters()">
+                    Clear
+                  </button>
+                  <button type="button"
+                          class="btn btn-primary"
+                          (click)="applyFilters()">
+                    Apply Filters
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (data) {
+    <div class="row mt-3">
+      <div class="col-12">
+        <table class="w-100 table-bordered table-striped-columns">
+          <thead>
+          <tr>
+            <th>Id</th>
+            <th>Description</th>
+            <th>Transaction Date</th>
+            <th>Purchase Amount</th>
+            <th>Unique Identifier</th>
+            <th colspan="3">Actions</th>
+          </tr>
+          </thead>
+          <tbody>
+          @for (item of data.items; track item.id) {
+            <tr>
+              <td class="text-center">{{item.id}}</td>
+              <td class="text-start">{{item.description}}</td>
+              <td class="text-center">{{ item.transactionDatetimeUtc | date: 'MM/dd/yyyy' }}</td>
+              <td class="text-end">{{ item.purchaseAmount | currency }}</td>
+              <td class="text-center">{{ item.transactionIdentifier }}</td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-primary" (click)="editTransaction(item)">Edit</button>
+              </td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-danger" (click)="deleteTransaction(item.id)">Delete</button>
+              </td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-secondary" (click)="convertCurrency(item)">Convert Currency</button>
+              </td>
+            </tr>
+          }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="row mt-3">
+      <div class="col-12 d-flex justify-content-center">
+        <pagination
+          [(ngModel)]="currentPage"
+          [totalItems]="data.count"
+          [itemsPerPage]="pageSize"
+          [maxSize]="5"
+          [boundaryLinks]="true"
+          [rotate]="true"
+          (pageChanged)="paginate($event.page)"
+          previousText="&lsaquo;"
+          nextText="&rsaquo;"
+          firstText="&laquo;"
+          lastText="&raquo;">
+        </pagination>
+      </div>
+    </div>
+  }
+
+</div>
+
+<dialog #modalDialog>
+  <h2>{{purchaseId ? 'Edit' : 'New'}} Purchase</h2>
+
+  <form method="dialog" class="row" [formGroup]="purchaseForm">
+    <div class="col-12">
+      <div class="form-group">
+        <label class="form-label">Transaction Date (MM/DD/YYYY)</label>
+        <input type="text"
+               class="form-control"
+               bsDatepicker
+               formControlName="transactionDateUtc"
+               [bsConfig]="{dateInputFormat: 'MM/DD/YYYY'}">
+        @if (purchaseForm.get('transactionDateUtc')?.invalid && purchaseForm.get('transactionDateUtc')?.touched) {
+          <div class="erro-form">Please supply the transaction date</div>
+        }
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <input type="text" class="form-control" formControlName="description">
+        @if (purchaseForm.get('description')?.invalid && purchaseForm.get('description')?.touched) {
+          <div class="erro-form">Please supply the description</div>
+        }
+      </div>
+      <div class="form-group mt-2">
+        <label class="form-label">Transaction Value (USD)</label>
+        <input type="text" class="form-control" mask="separator.2" thousandSeparator="," decimalMarker="." formControlName="purchaseAmount">
+        @if (purchaseForm.get('purchaseAmount')?.invalid && purchaseForm.get('purchaseAmount')?.touched) {
+          <div class="erro-form">Please supply a value greater than zero</div>
+        }
+      </div>
+    </div>
+
+    <div class="col-12 mt-5 text-end">
+      <button type="button" class="btn btn-outline-dark me-3" (click)="closeDialog()">Dismiss</button>
+      <button type="button" class="btn btn-primary" (click)="applyDialog()" [disabled]="!purchaseForm.valid">Apply</button>
+    </div>
+  </form>
+
+</dialog>
+
+<dialog #convertDialog class="bg-light">
+  <h2>Currency Conversion</h2>
+
+  <form method="dialog" class="row">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="form-group">
+          <label class="form-label">Select Country and Currency</label>
+          <select class="form-select" name="field" [(ngModel)]="idCountryCurrency" (change)="getExchangeRate()">
+            <option [ngValue]="0">Please select</option>
+            @for (item of countriesCurrencies; track item.id) {
+              <option [ngValue]="item.id">{{item.country}} - {{item.currency}}</option>
+            }
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-3">
+      <div class="col-12">
+        <table class="w-100 table-bordered table-striped-columns">
+          <thead>
+          <tr>
+            <th>Description</th>
+            <th>Transaction Date</th>
+            <th>Amount USD</th>
+            <th>Country</th>
+            <th>Currency</th>
+            <th>Exchange Rate</th>
+            <th>Converted Amount</th>
+            <th>Record Date</th>
+            <th>Days Past</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+            <td>{{convertingItem?.description}}</td>
+            <td class="text-center">{{convertingItem?.transactionDatetimeUtc | date: 'MM/dd/yyyy'}}</td>
+            <td class="text-end">{{convertingItem?.purchaseAmount | currency}}</td>
+            <td>{{countryCurrencyToConvert?.country}}</td>
+            <td>{{countryCurrencyToConvert?.currency}}</td>
+            <td class="text-end">{{exchangeRate?.exchangeRate}}</td>
+            <td class="text-end">
+              @if (daysSince && daysSince <= 180) {
+                {{(convertingItem?.purchaseAmount ?? 0) * (exchangeRate?.exchangeRate ?? 0) | currency}}
+              }
+              @else {
+                N/A
+              }
+            </td>
+            <td class="text-center">{{exchangeRate?.recordDate | date: 'MM/dd/yyyy'}}</td>
+            <td class="text-center" [ngClass]="daysSince && daysSince > 180 ? 'text-danger' : ''">
+              @if (daysSince) {
+                {{daysSince | number}} days ago
+              }
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="row mt-5">
+      <div class="col-12 text-end">
+        <button type="button" class="btn btn-outline-dark" (click)="closeConvertDialog()">Dismiss</button>
+      </div>
+    </div>
+  </form>
+</dialog>

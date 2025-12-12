@@ -1,0 +1,105 @@
+networks:
+  wex-network:
+    driver: bridge
+
+services:
+
+  # 1. Dotnet 9 backend
+  backend:
+    container_name: dotnet_backend
+    image: mcr.microsoft.com/dotnet/aspnet:9.0
+    user: "app"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp
+      - /app/tmp
+    ports:
+      - "5190:5190"
+    volumes:
+      - ./backend:/app
+    working_dir: /app
+    environment:
+      - ASPNETCORE_URLS=${ASPNETCORE_URLS:-http://+:5190}
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ISSUER=${JWT_ISSUER:-Wex.API}
+      - JWT_AUDIENCE=${JWT_AUDIENCE:-Wex.Client}
+      - JWT_EXPIRATION_MINUTES=${JWT_EXPIRATION_MINUTES:-60}
+      - AUTH_USERNAME=${AUTH_USERNAME}
+      - AUTH_PASSWORD=${AUTH_PASSWORD}
+      - MARIADB_HOST=database
+      - MARIADB_PORT=${MARIADB_PORT:-3306}
+      - MARIADB_DATABASE=${MARIADB_DATABASE}
+      - MARIADB_USER=${MARIADB_USER}
+      - MARIADB_PASSWORD=${MARIADB_PASSWORD}
+      - LOG_PATH=/app/tmp/log-.txt
+    command: dotnet Backend.dll
+    depends_on:
+      database:
+        condition: service_started
+    networks:
+      - wex-network
+
+  # 2. NGINX serving Angular files
+  frontend:
+    container_name: nginx_frontend
+    image: nginx:stable-alpine
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETUID
+      - SETGID
+      - NET_BIND_SERVICE
+      - DAC_OVERRIDE
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+      - /tmp
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "8100:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend:/usr/share/nginx/html:ro
+    networks:
+      - wex-network
+
+  # 3. MariaDB database
+  database:
+    container_name: mariadb_db
+    image: mariadb:11.6
+    user: "mysql"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETUID
+      - SETGID
+      - DAC_OVERRIDE
+    ports:
+      - "3306:3306"
+    environment:
+      - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
+      - MARIADB_DATABASE=${MARIADB_DATABASE}
+      - MARIADB_USER=${MARIADB_USER}
+      - MARIADB_PASSWORD=${MARIADB_PASSWORD}
+    volumes:
+      - ./01-wex_db.sql:/docker-entrypoint-initdb.d/01-wex_db.sql:ro
+      - ./02-permissions.sh:/docker-entrypoint-initdb.d/02-permissions.sh:ro
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - wex-network
+
+volumes:
+  mariadb_data:

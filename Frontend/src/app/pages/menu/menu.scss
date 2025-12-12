@@ -1,0 +1,31 @@
+
+.card {
+  border: 1px solid #dee2e6;
+
+  .card-body {
+    background-color: #f8f9fa;
+
+    .form-label {
+      font-weight: 500;
+      font-size: 0.85rem;
+      margin-bottom: 0.25rem;
+    }
+  }
+}
+
+table {
+  th {
+    text-align: center;
+    background-color: #242424;
+    color: #fff;
+  }
+  th, td {
+    padding: 3px;
+    font-size: 0.8rem;
+  }
+
+  tbody td button.btn {
+    font-size: 0.7rem;
+    min-width: 100px;
+  }
+}

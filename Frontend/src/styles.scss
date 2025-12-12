@@ -1,0 +1,23 @@
+/* You can add global styles to this file, and also import other style files */
+
+/* ngx-bootstrap datepicker styles */
+@import 'ngx-bootstrap/datepicker/bs-datepicker.css';
+
+:root {
+  --bs-btn-font-size: 0.8rem;
+}
+
+html, body {
+  font-size: 14px;
+}
+
+body {
+  padding-top: 100px; /* to compensate fixed header */
+}
+
+div.erro-form {
+  color: red;
+  font-size: 0.8rem;
+  margin-top: 0.2rem;
+}
+

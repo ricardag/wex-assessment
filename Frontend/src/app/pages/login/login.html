@@ -1,0 +1,46 @@
+<div class="container">
+  <div class="row mt-5 mb-3">
+    <div class="col text-center">
+      <h1>Wex Assessment for Ricardo Almeida</h1>
+      <h2>Access Control</h2>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-4"></div>
+    <div class="col-md-4">
+
+     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+
+        <div class="form-group">
+          <label>Your login</label>
+          <input type="text" name="username" class="form-control" formControlName="username">
+          @if (loginForm.get('username')?.invalid && loginForm.get('username')?.touched) {
+            <div class="erro-form">Please supply your login</div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label>Your password</label>
+          <input type="password" name="password" class="form-control" formControlName="password">
+          @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+            <div class="erro-form">Please supply your password</div>
+          }
+        </div>
+
+        <div class="form-group mt-3 text-center">
+          <button type="submit" class="btn btn-primary">Login</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  @if (loginError) {
+    <div class="row mt-3">
+      <div class="col-12 text-center text-danger">
+        Invalid login, try again.
+      </div>
+    </div>
+  }
+</div>

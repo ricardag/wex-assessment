@@ -1,0 +1,30 @@
+@if (authService.isLoggedIn()) {
+  <div class="container-fluid fixed-top header">
+    <div class="d-flex align-items-center justify-content-between">
+      <img src="/wex-favicon.png" alt="Logo" routerLink="/menu" class="logo">
+      <div class="flex-grow-1 d-flex flex-column justify-content-between ms-3">
+        <div class="title">
+          Welcome, user
+        </div>
+        <div class="top-menu d-flex justify-content-between align-items-center">
+          <a routerLink="/menu"><i class="fa-regular fa-house"></i> Home</a>
+          <a href="" (click)="logout()"><i class="fa-solid fa-right-from-bracket"></i> Exit</a>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+@if (isLoading()) {
+  <div class="loading-overlay">
+    <div class="loading-spinner">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  </div>
+}
+
+<div class="container-fluid pb-5">
+  <router-outlet/>
+</div>
